@@ -113,11 +113,11 @@ def server_started_with_nojournal(client):
     return server_started_with_option(client, '--nojournal', 'nojournal')
 
 
-def server_is_master_with_slave(client):
+def server_is_main_with_subordinate(client):
     command_line = get_command_line(client)
     if 'parsed' in command_line:
-        return command_line['parsed'].get('master', False)
-    return '--master' in command_line['argv']
+        return command_line['parsed'].get('main', False)
+    return '--main' in command_line['argv']
 
 def drop_collections(db):
     for coll in db.collection_names():
@@ -138,7 +138,7 @@ def joinall(threads):
         assert not t.isAlive(), "Thread %s hung" % t
 
 def is_mongos(client):
-    res = client.admin.command('ismaster')
+    res = client.admin.command('ismain')
     return res.get('msg', '') == 'isdbgrid'
 
 def enable_text_search(client):
@@ -578,9 +578,9 @@ class _TestLazyConnectMixin(object):
 
         # Make the client connect, so that it sets its max_bson_size and
         # max_message_size attributes.
-        ismaster = c.db.command('ismaster')
-        self.assertEqual(ismaster['maxBsonObjectSize'], c.max_bson_size)
-        if 'maxMessageSizeBytes' in ismaster:
+        ismain = c.db.command('ismain')
+        self.assertEqual(ismain['maxBsonObjectSize'], c.max_bson_size)
+        if 'maxMessageSizeBytes' in ismain:
             self.assertEqual(
-                ismaster['maxMessageSizeBytes'],
+                ismain['maxMessageSizeBytes'],
                 c.max_message_size)

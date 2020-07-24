@@ -68,9 +68,9 @@ class TestCollection(unittest.TestCase):
     def setUp(self):
         self.client = get_client()
         self.db = self.client.pymongo_test
-        ismaster = self.db.command('ismaster')
-        self.setname = ismaster.get('setName')
-        self.w = len(ismaster.get('hosts', [])) or 1
+        ismain = self.db.command('ismain')
+        self.setname = ismain.get('setName')
+        self.w = len(ismain.get('hosts', [])) or 1
 
     def tearDown(self):
         self.db.drop_collection("test_large_limit")
@@ -1308,9 +1308,9 @@ class TestCollection(unittest.TestCase):
         self.db.test.remove({"x": 1}, w=1, wtimeout=1)
         self.db.test.update({"x": 1}, {"y": 2}, w=1, wtimeout=1)
 
-        ismaster = self.client.admin.command("ismaster")
-        if ismaster.get("setName"):
-            w = len(ismaster["hosts"]) + 1
+        ismain = self.client.admin.command("ismain")
+        if ismain.get("setName"):
+            w = len(ismain["hosts"]) + 1
             self.assertRaises(WTimeoutError, self.db.test.save,
                               {"x": 1}, w=w, wtimeout=1)
             self.assertRaises(WTimeoutError, self.db.test.insert,

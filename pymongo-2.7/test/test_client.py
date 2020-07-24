@@ -46,7 +46,7 @@ from test.utils import (assertRaisesExactly,
                         delay,
                         is_mongos,
                         remove_all_users,
-                        server_is_master_with_slave,
+                        server_is_main_with_subordinate,
                         server_started_with_auth,
                         TestRequestMixin,
                         _TestLazyConnectMixin,
@@ -221,8 +221,8 @@ class TestClient(unittest.TestCase, TestRequestMixin):
     def test_copy_db(self):
         c = MongoClient(host, port)
         # Due to SERVER-2329, databases may not disappear
-        # from a master in a master-slave pair.
-        if server_is_master_with_slave(c):
+        # from a main in a main-subordinate pair.
+        if server_is_main_with_subordinate(c):
             raise SkipTest("SERVER-2329")
         # We test copy twice; once starting in a request and once not. In
         # either case the copy should succeed (because it starts a request
@@ -317,9 +317,9 @@ class TestClient(unittest.TestCase, TestRequestMixin):
 
         self.assertEqual(c, MongoClient("mongodb://%s:%d" % (host, port)))
         self.assertTrue(MongoClient(
-            "mongodb://%s:%d" % (host, port), slave_okay=True).slave_okay)
+            "mongodb://%s:%d" % (host, port), subordinate_okay=True).subordinate_okay)
         self.assertTrue(MongoClient(
-            "mongodb://%s:%d/?slaveok=true;w=2" % (host, port)).slave_okay)
+            "mongodb://%s:%d/?subordinateok=true;w=2" % (host, port)).subordinate_okay)
 
     def test_get_default_database(self):
         c = MongoClient("mongodb://%s:%d/foo" % (host, port), _connect=False)
@@ -621,7 +621,7 @@ class TestClient(unittest.TestCase, TestRequestMixin):
             raise SkipTest('Requires server >= 2.0 to test with auth')
 
         res = c.admin.command('getCmdLineOpts')
-        if '--master' in res['argv'] and version.at_least(c, (2, 3, 0)):
+        if '--main' in res['argv'] and version.at_least(c, (2, 3, 0)):
             raise SkipTest('SERVER-7714')
 
         self.assertFalse(c.is_locked)
@@ -970,7 +970,7 @@ with client.start_request() as request:
 
     def test_replica_set(self):
         client = MongoClient(host, port)
-        name = client.pymongo_test.command('ismaster').get('setName')
+        name = client.pymongo_test.command('ismain').get('setName')
         if not name:
             raise SkipTest('Not connected to a replica set')
 

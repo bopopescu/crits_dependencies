@@ -890,9 +890,9 @@ class TestBulkWriteConcern(BulkTestBase):
     def setUp(self):
         super(TestBulkWriteConcern, self).setUp()
         client = get_client()
-        ismaster = client.test.command('ismaster')
-        self.is_repl = bool(ismaster.get('setName'))
-        self.w = len(ismaster.get("hosts", []))
+        ismain = client.test.command('ismain')
+        self.is_repl = bool(ismain.get('setName'))
+        self.w = len(ismain.get("hosts", []))
         self.coll = client.pymongo_test.test
         self.coll.remove()
 

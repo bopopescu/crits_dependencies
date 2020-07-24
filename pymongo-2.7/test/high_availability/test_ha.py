@@ -132,7 +132,7 @@ class TestDirectConnection(HATestCase):
             {'read_preference': SECONDARY},
             {'read_preference': SECONDARY_PREFERRED},
             {'read_preference': NEAREST},
-            {'slave_okay': True}
+            {'subordinate_okay': True}
         ]:
             client = MongoClient(primary_host,
                                  primary_port,
@@ -162,12 +162,12 @@ class TestDirectConnection(HATestCase):
                     AutoReconnect, client.pymongo_test.test.find_one)
 
             # Since an attempt at an acknowledged write to a secondary from a
-            # direct connection raises AutoReconnect('not master'), MongoClient
+            # direct connection raises AutoReconnect('not main'), MongoClient
             # should do the same for unacknowledged writes.
             try:
                 client.pymongo_test.test.insert({}, w=0)
             except AutoReconnect, e:
-                self.assertEqual('not master', e.args[0])
+                self.assertEqual('not main', e.args[0])
             else:
                 self.fail(
                     'Unacknowledged insert into secondary client %s should'
@@ -183,7 +183,7 @@ class TestDirectConnection(HATestCase):
             try:
                 client.pymongo_test.test.insert({}, w=0)
             except AutoReconnect, e:
-                self.assertEqual('not master', e.args[0])
+                self.assertEqual('not main', e.args[0])
             else:
                 self.fail(
                     'Unacknowledged insert into arbiter client %s should'
@@ -201,7 +201,7 @@ class TestPassiveAndHidden(HATestCase):
                    {'priority': 0},
                    {'arbiterOnly': True},
                    {'priority': 0, 'hidden': True},
-                   {'priority': 0, 'slaveDelay': 5}
+                   {'priority': 0, 'subordinateDelay': 5}
         ]
         res = ha_tools.start_replica_set(members)
         self.seed, self.name = res
@@ -228,7 +228,7 @@ class TestPassiveAndHidden(HATestCase):
 
 class TestMonitorRemovesRecoveringMember(HATestCase):
     # Members in STARTUP2 or RECOVERING states are shown in the primary's
-    # isMaster response, but aren't secondaries and shouldn't be read from.
+    # isMain response, but aren't secondaries and shouldn't be read from.
     # Verify that if a secondary goes into RECOVERING mode, the Monitor removes
     # it from the set of readers.
 
@@ -711,7 +711,7 @@ class TestReadPreference(HATestCase):
         self.assertTrue(MongoClient(
             unpartition_node(primary), use_greenlets=use_greenlets,
             read_preference=PRIMARY_PREFERRED
-        ).admin.command('ismaster')['ismaster'])
+        ).admin.command('ismain')['ismain'])
 
         sleep(2 * MONITOR_INTERVAL)
 
@@ -746,7 +746,7 @@ class TestReadPreference(HATestCase):
         self.assertTrue(MongoClient(
             unpartition_node(primary), use_greenlets=use_greenlets,
             read_preference=PRIMARY_PREFERRED
-        ).admin.command('ismaster')['ismaster'])
+        ).admin.command('ismain')['ismain'])
 
         #       PRIMARY
         assertReadFrom(primary, PRIMARY)

@@ -33,8 +33,8 @@ source_suffix = '.rst'
 # The encoding of source files.
 #source_encoding = 'utf-8'
 
-# The master toctree document.
-master_doc = 'toc'
+# The main toctree document.
+main_doc = 'toc'
 
 # General information about the project.
 project = u'Tastypie'
@@ -198,7 +198,7 @@ latex_documents = [
 # List of tuples (startdocname, targetname, title, author, dir_entry,
 # description, category, toctree_only)
 texinfo_documents=[(
-    master_doc, "django-tastypie", "", "", "Tastypie",
+    main_doc, "django-tastypie", "", "", "Tastypie",
     "Documentation of the Tastypie framework", "Web development", False
 )]
 

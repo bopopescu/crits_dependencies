@@ -69,9 +69,9 @@ class MockClientBase(object):
             self.mock_primary = None
 
         if config is not None:
-            self.mock_ismaster_hosts = config
+            self.mock_ismain_hosts = config
         else:
-            self.mock_ismaster_hosts = members[:]
+            self.mock_ismain_hosts = members[:]
 
         self.mock_mongoses = mongoses[:]
 
@@ -98,7 +98,7 @@ class MockClientBase(object):
     def set_max_write_batch_size(self, host, size):
         self.mock_max_write_batch_sizes[host] = size
 
-    def mock_is_master(self, host):
+    def mock_is_main(self, host):
         min_wire_version, max_wire_version = self.mock_wire_versions.get(
             host,
             (common.MIN_WIRE_VERSION, common.MAX_WIRE_VERSION))
@@ -112,20 +112,20 @@ class MockClientBase(object):
 
         if host in self.mock_standalones:
             return {
-                'ismaster': True,
+                'ismain': True,
                 'minWireVersion': min_wire_version,
                 'maxWireVersion': max_wire_version,
                 'maxWriteBatchSize': max_write_batch_size}
 
         if host in self.mock_members:
-            ismaster = (host == self.mock_primary)
+            ismain = (host == self.mock_primary)
 
             # Simulate a replica set member.
             response = {
-                'ismaster': ismaster,
-                'secondary': not ismaster,
+                'ismain': ismain,
+                'secondary': not ismain,
                 'setName': 'rs',
-                'hosts': self.mock_ismaster_hosts,
+                'hosts': self.mock_ismain_hosts,
                 'minWireVersion': min_wire_version,
                 'maxWireVersion': max_wire_version,
                 'maxWriteBatchSize': max_write_batch_size}
@@ -137,21 +137,21 @@ class MockClientBase(object):
 
         if host in self.mock_mongoses:
             return {
-                'ismaster': True,
+                'ismain': True,
                 'minWireVersion': min_wire_version,
                 'maxWireVersion': max_wire_version,
                 'msg': 'isdbgrid',
                 'maxWriteBatchSize': max_write_batch_size}
 
         # In test_internal_ips(), we try to connect to a host listed
-        # in ismaster['hosts'] but not publicly accessible.
+        # in ismain['hosts'] but not publicly accessible.
         raise socket.error('Unknown host: %s' % host)
 
     def simple_command(self, sock_info, dbname, spec):
         # __simple_command is also used for authentication, but in this
-        # test it's only used for ismaster.
-        assert spec == {'ismaster': 1}
-        response = self.mock_is_master(
+        # test it's only used for ismain.
+        assert spec == {'ismain': 1}
+        response = self.mock_is_main(
             '%s:%s' % (sock_info.mock_host, sock_info.mock_port))
 
         ping_time = 10
@@ -160,11 +160,11 @@ class MockClientBase(object):
 
 class MockClient(MockClientBase, MongoClient):
     def __init__(
-        self, standalones, members, mongoses, ismaster_hosts=None,
+        self, standalones, members, mongoses, ismain_hosts=None,
         *args, **kwargs
     ):
         MockClientBase.__init__(
-            self, standalones, members, mongoses, ismaster_hosts)
+            self, standalones, members, mongoses, ismain_hosts)
 
         kwargs['_pool_class'] = my_partial(MockPool, self)
         MongoClient.__init__(self, *args, **kwargs)
@@ -175,17 +175,17 @@ class MockClient(MockClientBase, MongoClient):
 
 class MockReplicaSetClient(MockClientBase, MongoReplicaSetClient):
     def __init__(
-        self, standalones, members, mongoses, ismaster_hosts=None,
+        self, standalones, members, mongoses, ismain_hosts=None,
         *args, **kwargs
     ):
         MockClientBase.__init__(
-            self, standalones, members, mongoses, ismaster_hosts)
+            self, standalones, members, mongoses, ismain_hosts)
 
         kwargs['_pool_class'] = my_partial(MockPool, self)
         MongoReplicaSetClient.__init__(self, *args, **kwargs)
 
-    def _MongoReplicaSetClient__is_master(self, host):
-        response = self.mock_is_master('%s:%s' % host)
+    def _MongoReplicaSetClient__is_main(self, host):
+        response = self.mock_is_main('%s:%s' % host)
         connection_pool = MockPool(self, host)
         ping_time = 10
         return response, connection_pool, ping_time

@@ -344,15 +344,15 @@ def get_recovering():
 
 
 def get_passives():
-    return get_client().admin.command('ismaster').get('passives', [])
+    return get_client().admin.command('ismain').get('passives', [])
 
 
 def get_hosts():
-    return get_client().admin.command('ismaster').get('hosts', [])
+    return get_client().admin.command('ismain').get('hosts', [])
 
 
 def get_hidden_members():
-    # Both 'hidden' and 'slaveDelay'
+    # Both 'hidden' and 'subordinateDelay'
     secondaries = get_secondaries()
     readers = get_hosts() + get_passives()
     for member in readers:
